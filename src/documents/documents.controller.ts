@@ -31,7 +31,7 @@ export class DocumentsController {
   @Get()
   @ApiOperation({ summary: 'Get all assigned document designations with filtering, sorting, and pagination' })
   @ApiQuery({ name: 'standard', required: false, enum: ['ЕСПД', 'ЕСКД', 'ГОСТ 34'] })
-  @ApiQuery({ name: 'productId', required: false, type: String, format: 'uuid', description: 'Filter by product ID'})
+  @ApiQuery({ name: 'productId', required: false, type: String, description: 'Filter by product ID (UUID format expected)'})
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'sortBy', required: false, type: String, description: 'e.g., designation, productNameSnapshot, assignmentDate' })
   @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc', 'ASC', 'DESC'] })
