@@ -34,15 +34,15 @@ export class Bitrix24Service {
       throw new InternalServerErrorException('Bitrix24 integration is not configured on the server.');
     }
     if (product.bitrixTaskId) {
-        throw new BadRequestException(\`Задача для продукта "\${product.productName}" (ID задачи в Битрикс: \${product.bitrixTaskId}) уже создана.\`);
+        throw new BadRequestException(`Задача для продукта "${product.productName}" (ID задачи в Битрикс: ${product.bitrixTaskId}) уже создана.`);
     }
 
     const baseDesignation = product.fullEspdBaseDesignation || product.fullEskdBaseDesignation || product.fullGost34BaseDesignation || 'N/A';
 
     const taskData: any = {
       fields: {
-        TITLE: \`Продукт: \${product.productName} - \${baseDesignation}\`,
-        DESCRIPTION: \`Детали продукта:\nНаименование: \${product.productName}\nСтандарт: \${product.standard}\nБазовое обозначение: \${baseDesignation}\nДата регистрации: \${new Date(product.registrationDate).toLocaleDateString('ru-RU')}\nКомментарий: \${product.comment || '- нет -'}\`,
+        TITLE: `Продукт: ${product.productName} - ${baseDesignation}`,
+        DESCRIPTION: `Детали продукта:\nНаименование: ${product.productName}\nСтандарт: ${product.standard}\nБазовое обозначение: ${baseDesignation}\nДата регистрации: ${new Date(product.registrationDate).toLocaleDateString('ru-RU')}\nКомментарий: ${product.comment || '- нет -'}`,
         [this.userFieldDesignationId]: baseDesignation,
       },
     };
@@ -54,31 +54,31 @@ export class Bitrix24Service {
       taskData.fields.GROUP_ID = projectId;
     }
     
-    const url = \`\${this.webhookUrl.replace(/\/$/, '')}/tasks.task.add.json\`;
+    const url = `${this.webhookUrl.replace(/\/$/, '')}/tasks.task.add.json`;
 
     try {
-      this.logger.log(\`Отправка запроса на создание задачи в Битрикс24: \${JSON.stringify(taskData)} на \${url}\`);
+      this.logger.log(`Отправка запроса на создание задачи в Битрикс24: ${JSON.stringify(taskData)} на ${url}`);
       const response = await firstValueFrom(
         this.httpService.post(url, taskData)
       );
 
-      this.logger.log(\`Ответ от API Битрикс24: \${JSON.stringify(response.data)}\`);
+      this.logger.log(`Ответ от API Битрикс24: ${JSON.stringify(response.data)}`);
 
       if (response.data && response.data.result && response.data.result.task && response.data.result.task.id) {
         const bitrixTaskId = response.data.result.task.id.toString();
-        this.logger.log(\`Задача в Битрикс24 успешно создана с ID: \${bitrixTaskId}\`);
+        this.logger.log(`Задача в Битрикс24 успешно создана с ID: ${bitrixTaskId}`);
         
         const updatedProduct = await this.productsService.updateBitrixTaskId(product.id, bitrixTaskId);
         return { taskId: bitrixTaskId, updatedProduct };
       } else {
         const errorMsg = response.data?.error_description || response.data?.error || 'Unknown error from Bitrix24 API';
-        this.logger.error(\`Не удалось создать задачу в Битрикс24: \${errorMsg}\`, response.data);
-        throw new InternalServerErrorException(\`Ошибка API Битрикс24 при создании задачи: \${errorMsg}\`);
+        this.logger.error(`Не удалось создать задачу в Битрикс24: ${errorMsg}`, response.data);
+        throw new InternalServerErrorException(`Ошибка API Битрикс24 при создании задачи: ${errorMsg}`);
       }
     } catch (error) {
       this.logger.error('Ошибка при создании задачи в Битрикс24:', error.response?.data || error.message, error.stack);
       const errorMessage = error.response?.data?.error_description || error.response?.data?.error || error.message || 'Неизвестная ошибка';
-      throw new InternalServerErrorException(\`Не удалось создать задачу в Битрикс24: \${errorMessage}\`);
+      throw new InternalServerErrorException(`Не удалось создать задачу в Битрикс24: ${errorMessage}`);
     }
   }
 }

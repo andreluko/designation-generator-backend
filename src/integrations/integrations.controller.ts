@@ -28,7 +28,7 @@ export class IntegrationsController {
   ): Promise<BitrixTaskResponseDto> {
     const product = await this.productsService.findOne(createBitrixTaskDto.productId);
     if (!product) { // Should be handled by productsService.findOne, but as a safeguard
-        throw new NotFoundException(\`Продукт с ID \${createBitrixTaskDto.productId} не найден.\`);
+        throw new NotFoundException(`Продукт с ID ${createBitrixTaskDto.productId} не найден.`);
     }
     
     const { taskId, updatedProduct } = await this.bitrix24Service.createTaskForProduct(
@@ -37,7 +37,7 @@ export class IntegrationsController {
       createBitrixTaskDto.projectId,
     );
     return {
-        message: \`Задача в Битрикс24 успешно создана с ID: \${taskId}\`,
+        message: `Задача в Битрикс24 успешно создана с ID: ${taskId}`,
         bitrixTaskId: taskId,
         updatedProduct: updatedProduct // Return the updated product
     };
