@@ -2,9 +2,9 @@ import { Injectable, NotFoundException, BadRequestException, ConflictException, 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindManyOptions, ILike, Brackets } from 'typeorm';
 import { DocumentEntity } from './entities/document.entity';
-import { CreateDocumentDto } from './dto/create-document.dto.ts';
-import { UpdateDocumentCommentDto } from './dto/update-document-comment.dto.ts';
-import { DocumentQueryDto } from './dto/document-query.dto.ts';
+import { CreateDocumentDto } from './dto/create-document.dto';
+import { UpdateDocumentCommentDto } from './dto/update-document-comment.dto';
+import { DocumentQueryDto } from './dto/document-query.dto';
 import { ProductsService } from '../products/products.service';
 import { StandardEnum } from '../types/standard.enum';
 import { CustomGost34TypesService } from '../custom-gost34-types/custom-gost34-types.service';

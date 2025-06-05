@@ -1,10 +1,11 @@
+
 import { Injectable, NotFoundException, ConflictException, InternalServerErrorException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindManyOptions, ILike, Brackets } from 'typeorm';
 import { ProductEntity } from './entities/product.entity';
-import { CreateProductDto } from './dto/create-product.dto.ts';
-import { UpdateProductCommentDto } from './dto/update-product-comment.dto.ts';
-import { ProductQueryDto } from './dto/product-query.dto.ts';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductCommentDto } from './dto/update-product-comment.dto';
+import { ProductQueryDto } from './dto/product-query.dto';
 import { StandardEnum } from '../types/standard.enum';
 import { ESPD_ORG_CODE_DEFAULT } from '../constants';
 // import { DEFAULT_PRODUCT_SEQUENTIAL_PART_ESPD, DEFAULT_PRODUCT_SERIAL_NUM_ESKD, DEFAULT_SYSTEM_REG_NUM_GOST34 } from '../constants';
@@ -32,19 +33,22 @@ export class ProductsService {
   ): Promise<string> {
     const lastProduct = await this.productsRepository.findOne({
       where: { standard, ...contextFields },
-      order: { [sequenceField]: 'DESC' },
+      order: { [sequenceField as string]: 'DESC' }, // Cast to string if TS complains about symbol
       select: [sequenceField]
     });
 
     let nextNum = 1;
     if (lastProduct && lastProduct[sequenceField]) {
-      const lastNum = parseInt(lastProduct[sequenceField] as string, 10);
-      if (!isNaN(lastNum)) {
-        nextNum = lastNum + 1;
+      const lastNumStr = lastProduct[sequenceField] as string;
+      if (lastNumStr && /^\d+$/.test(lastNumStr)) { // ensure it's a string of digits
+        const lastNum = parseInt(lastNumStr, 10);
+        if (!isNaN(lastNum)) {
+          nextNum = lastNum + 1;
+        }
       }
     }
     if (nextNum.toString().length > digits) {
-        throw new ConflictException(`Достигнут лимит порядковых номеров для ${sequenceField} в данном контексте.`);
+        throw new ConflictException(`Достигнут лимит порядковых номеров для ${String(sequenceField)} в данном контексте.`);
     }
     return this.formatSequentialNumber(nextNum, digits);
   }
@@ -86,13 +90,25 @@ export class ProductsService {
           product.fullGost34BaseDesignation = `${product.gost34OrgCode}.${product.gost34ClassCode}.${product.gost34SystemRegNum}`;
           break;
         default:
-          throw new BadRequestException('Неподдерживаемый стандарт продукта.');
+          // The error "Type 'CreateProductDto' is not assignable to type 'never'" on the 'exhaustiveCheck' line
+          // indicates a type inference issue where 'standard' is perceived as 'CreateProductDto'.
+          // Removing 'exhaustiveCheck' and using 'standard' directly in the error.
+          this.logger.error(`Неподдерживаемый стандарт продукта достиг default case: ${String(standard)}`);
+          throw new BadRequestException(`Неподдерживаемый стандарт продукта: ${String(standard)}`);
       }
-      
+
       // Final check for designation uniqueness before saving
-      const designationField = `full${standard.charAt(0).toUpperCase() + standard.slice(1).toLowerCase()}BaseDesignation` as keyof ProductEntity;
-      if (product[designationField]) {
-          const existingDesignationProduct = await this.productsRepository.findOne({ where: { [designationField]: product[designationField] }});
+      const designationFieldMap: Record<StandardEnum, keyof ProductEntity | null > = {
+        [StandardEnum.ESPD]: 'fullEspdBaseDesignation',
+        [StandardEnum.ESKD]: 'fullEskdBaseDesignation',
+        [StandardEnum.GOST34]: 'fullGost34BaseDesignation',
+      };
+      const designationField = designationFieldMap[standard];
+
+      if (designationField && product[designationField]) {
+          const whereClause: Partial<ProductEntity> = {};
+          whereClause[designationField] = product[designationField] as any; // Type assertion
+          const existingDesignationProduct = await this.productsRepository.findOne({ where: whereClause });
           if (existingDesignationProduct) {
               throw new ConflictException(`Сгенерированное базовое обозначение "${product[designationField]}" уже существует.`);
           }
@@ -111,7 +127,7 @@ export class ProductsService {
 
   async findAll(queryDto: ProductQueryDto): Promise<{ data: ProductEntity[]; total: number }> {
     const { standard, search, sortBy, sortOrder, page = 1, limit = 10 } = queryDto;
-    
+
     const queryBuilder = this.productsRepository.createQueryBuilder('product');
 
     if (standard) {
@@ -128,20 +144,20 @@ export class ProductsService {
     }
 
     // Handle sorting: ensure sortBy is a valid field of ProductEntity
-    const validSortFields: (keyof ProductEntity)[] = ['productName', 'standard', 'registrationDate', 'comment', 'createdAt'];
+    const validSortFields: (keyof ProductEntity)[] = ['productName', 'standard', 'registrationDate', 'comment', 'createdAt', 'updatedAt', 'fullEspdBaseDesignation', 'fullEskdBaseDesignation', 'fullGost34BaseDesignation'];
     const effectiveSortBy = sortBy && validSortFields.includes(sortBy as keyof ProductEntity) ? sortBy : 'registrationDate';
     const effectiveSortOrder = (sortOrder || 'DESC').toUpperCase() as 'ASC' | 'DESC';
-    queryBuilder.orderBy(`product.${effectiveSortBy}`, effectiveSortOrder);
-    
+    queryBuilder.orderBy(`product.${String(effectiveSortBy)}`, effectiveSortOrder);
+
     queryBuilder.skip((page - 1) * limit).take(limit);
-    
+
     const [data, total] = await queryBuilder.getManyAndCount();
     return { data, total };
   }
 
   async findOne(id: string): Promise<ProductEntity> {
-    const product = await this.productsRepository.findOne({ 
-        where: { id }, 
+    const product = await this.productsRepository.findOne({
+        where: { id },
         relations: ['documents'] // Optionally load related documents
     });
     if (!product) {
@@ -153,9 +169,9 @@ export class ProductsService {
   async updateComment(id: string, updateProductCommentDto: UpdateProductCommentDto): Promise<ProductEntity> {
     const product = await this.findOne(id); // findOne will throw NotFoundException if not found
     // If comment is explicitly set to null, or undefined/empty string (treat as clear)
-    product.comment = (updateProductCommentDto.comment === null || updateProductCommentDto.comment === '') 
-                      ? null 
-                      : updateProductCommentDto.comment || product.comment;
+    product.comment = (updateProductCommentDto.comment === null || updateProductCommentDto.comment === '')
+                      ? null
+                      : updateProductCommentDto.comment || product.comment; // Keep existing if new one is undefined
     return this.productsRepository.save(product);
   }
 

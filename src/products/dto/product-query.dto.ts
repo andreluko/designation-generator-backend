@@ -2,6 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, IsEnum, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { StandardEnum } from '../../types/standard.enum';
+import { ProductEntity } from '../entities/product.entity'; // Import ProductEntity
 
 export class ProductQueryDto {
   @ApiPropertyOptional({ enum: StandardEnum, description: 'Filter by standard' })
@@ -17,7 +18,7 @@ export class ProductQueryDto {
   @ApiPropertyOptional({ description: 'Field to sort by (e.g., productName, registrationDate, standard)', example: 'productName' })
   @IsOptional()
   @IsString()
-  sortBy?: keyof ProductEntity; // Use keyof for better type safety if possible, or define allowed string values
+  sortBy?: keyof ProductEntity | string; // Allow string and validate in service, or use specific string literals
 
   @ApiPropertyOptional({ enum: ['asc', 'desc'], description: 'Sort order', example: 'asc' })
   @IsOptional()

@@ -2,9 +2,9 @@ import {
   Controller, Get, Post, Body, Param, Delete, Put, Query, UseGuards, HttpCode, HttpStatus, ParseUUIDPipe,
 } from '@nestjs/common';
 import { DocumentsService } from './documents.service';
-import { CreateDocumentDto } from './dto/create-document.dto.ts';
-import { UpdateDocumentCommentDto } from './dto/update-document-comment.dto.ts';
-import { DocumentQueryDto } from './dto/document-query.dto.ts';
+import { CreateDocumentDto } from './dto/create-document.dto';
+import { UpdateDocumentCommentDto } from './dto/update-document-comment.dto';
+import { DocumentQueryDto } from './dto/document-query.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { DocumentEntity } from './entities/document.entity';
@@ -31,7 +31,7 @@ export class DocumentsController {
   @Get()
   @ApiOperation({ summary: 'Get all assigned document designations with filtering, sorting, and pagination' })
   @ApiQuery({ name: 'standard', required: false, enum: ['ЕСПД', 'ЕСКД', 'ГОСТ 34'] })
-  @ApiQuery({ name: 'productId', required: false, type: String, format: 'uuid', description: 'Filter by product ID'})
+  @ApiQuery({ name: 'productId', required: false, type: String, description: 'Filter by product ID (UUID format)'})
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'sortBy', required: false, type: String, description: 'e.g., designation, productNameSnapshot, assignmentDate' })
   @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc', 'ASC', 'DESC'] })

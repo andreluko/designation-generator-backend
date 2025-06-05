@@ -2,9 +2,9 @@ import {
   Controller, Get, Post, Body, Param, Delete, Put, Query, UseGuards, HttpCode, HttpStatus, ParseUUIDPipe,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { CreateProductDto } from './dto/create-product.dto.ts';
-import { UpdateProductCommentDto } from './dto/update-product-comment.dto.ts';
-import { ProductQueryDto } from './dto/product-query.dto.ts';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductCommentDto } from './dto/update-product-comment.dto';
+import { ProductQueryDto } from './dto/product-query.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { ProductEntity } from './entities/product.entity';

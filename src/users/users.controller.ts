@@ -14,7 +14,7 @@ export class UsersController {
   // This endpoint might be for admin purposes or initial setup
   // Ensure it's properly secured if exposed.
   // For now, let's assume it requires JWT auth (e.g. an admin is logged in)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard) //
   @ApiBearerAuth()
   @Post('register') // Or a more secure path like /admin/users
   @ApiOperation({ summary: 'Register a new user (admin/setup purposes)' })
