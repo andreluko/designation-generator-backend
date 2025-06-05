@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CustomGost34TypeEntity } from './entities/custom-gost34-type.entity';
-import { CreateCustomGost34TypeDto } from './dto/create-custom-gost34-type.dto';
-import { UpdateCustomGost34TypeDto } from './dto/update-custom-gost34-type.dto';
+import { CustomGost34TypeEntity } from './entities/custom-gost34-type.entity.ts';
+import { CreateCustomGost34TypeDto } from './dto/create-custom-gost34-type.dto.ts';
+import { UpdateCustomGost34TypeDto } from './dto/update-custom-gost34-type.dto.ts';
 import { GOST34_DOC_TYPES } from '../constants'; // To check against standard types
 
 @Injectable()

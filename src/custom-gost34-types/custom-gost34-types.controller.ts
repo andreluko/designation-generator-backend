@@ -2,11 +2,11 @@ import {
   Controller, Get, Post, Body, Param, Delete, Put, UseGuards, HttpCode, HttpStatus, ParseUUIDPipe,
 } from '@nestjs/common';
 import { CustomGost34TypesService } from './custom-gost34-types.service';
-import { CreateCustomGost34TypeDto } from './dto/create-custom-gost34-type.dto';
-import { UpdateCustomGost34TypeDto } from './dto/update-custom-gost34-type.dto';
+import { CreateCustomGost34TypeDto } from './dto/create-custom-gost34-type.dto.ts';
+import { UpdateCustomGost34TypeDto } from './dto/update-custom-gost34-type.dto.ts';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
-import { CustomGost34TypeEntity } from './entities/custom-gost34-type.entity';
+import { CustomGost34TypeEntity } from './entities/custom-gost34-type.entity.ts';
 
 @ApiTags('custom-gost34-types')
 @ApiBearerAuth()
